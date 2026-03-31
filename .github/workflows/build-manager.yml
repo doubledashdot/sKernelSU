@@ -107,21 +107,6 @@ jobs:
               echo KEYSTORE_FILE='dummy.keystore'
             } >> gradle.properties
 
-      - name: Write PR key
-        if: github.event_name == 'pull_request'
-        env:
-          PR_KEYSTORE: ${{ needs.generate-key.outputs.keystore }}
-          PR_KEYSTORE_PASSWORD: ${{ needs.generate-key.outputs.keystore_password }}
-          PR_KEY_PASSWORD: ${{ needs.generate-key.outputs.key_password }}
-        run: |
-          echo "$PR_KEYSTORE" | base64 -d > pr-key.jks
-          {
-            echo KEYSTORE_PASSWORD="$PR_KEYSTORE_PASSWORD"
-            echo KEY_ALIAS='pr-key'
-            echo KEY_PASSWORD="$PR_KEY_PASSWORD"
-            echo KEYSTORE_FILE='pr-key.jks'
-          } >> gradle.properties
-
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
@@ -242,3 +227,20 @@ jobs:
           name: manager
           path: dist/*.apk
 
+      - name: Upload to telegram
+        if: github.event_name != 'pull_request' && steps.need_upload.outputs.UPLOAD == 'true'
+        env:
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_URL: ${{ github.event.head_commit.url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: Manager
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
+            export VERSION=$(git rev-list --count HEAD)
+            APK=$(find dist -name "*.apk" | head -n 1)
+            pip3 install telethon
+            python3 $GITHUB_WORKSPACE/scripts/ksubot.py $APK
+          fi
