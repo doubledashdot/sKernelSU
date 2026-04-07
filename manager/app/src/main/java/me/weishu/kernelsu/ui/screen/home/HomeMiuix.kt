@@ -1,5 +1,6 @@
 package me.weishu.kernelsu.ui.screen.home
 
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -239,9 +240,9 @@ private fun StatusCard(
                     }
                 }
                 val workingMode = when (state.lkmMode) {
-                    null -> null
-                    true -> "LKM"
-                    else -> "GKI"
+                    null -> " <LEGACY>"
+                    true -> " <LKM>"
+                    else -> " <GKI>"
                 }
                 val workingText = "${stringResource(id = R.string.home_working)}$workingState"
 
