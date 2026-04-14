@@ -637,6 +637,56 @@ static int add_try_umount(void __user *arg)
 	return 0;
 }
 
+struct ksu_get_hook_mode_cmd {
+    char mode[16];
+};
+
+struct ksu_get_version_tag_cmd {
+    char tag[32];
+};
+
+static int do_get_hook_mode(void __user *arg)
+{
+    struct ksu_get_hook_mode_cmd cmd = {0};
+
+#ifdef CONFIG_KSU_TAMPER_SYSCALL_TABLE
+    strscpy(cmd.mode, "Syscall", sizeof(cmd.mode));
+#else
+    strscpy(cmd.mode, "Manual", sizeof(cmd.mode));
+#endif
+
+    if (copy_to_user(arg, &cmd, sizeof(cmd))) {
+        pr_err("get_hook_mode: copy_to_user failed\n");
+        return -EFAULT;
+    }
+
+    return 0;
+}
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0)
+#define KSU_IOCTL_GET_HOOK_MODE \
+    _IOC(_IOC_READ, 'K', 98, 0)
+#define KSU_IOCTL_GET_VERSION_TAG \
+    _IOC(_IOC_READ, 'K', 99, 0)
+#else
+static const __u32 KSU_IOCTL_GET_HOOK_MODE = _IOC(_IOC_READ, 'K', 98, 0);
+static const __u32 KSU_IOCTL_GET_VERSION_TAG = _IOC(_IOC_READ, 'K', 99, 0);
+#endif
+
+static int do_get_version_tag(void __user *arg)
+{
+    struct ksu_get_version_tag_cmd cmd = {0};
+
+    strscpy(cmd.tag, KERNEL_SU_VERSION_TAG, sizeof(cmd.tag));
+
+    if (copy_to_user(arg, &cmd, sizeof(cmd))) {
+        pr_err("get_version_tag: copy_to_user failed\n");
+        return -EFAULT;
+    }
+
+    return 0;
+}
+
 static int do_set_init_pgrp(void __user *arg)
 {
 	int err;
@@ -716,6 +766,8 @@ static const struct ksu_ioctl_cmd_map ksu_ioctl_handlers[] = {
 	{ .cmd = KSU_IOCTL_SET_INIT_PGRP, .name = "SET_INIT_PGRP", .handler = do_set_init_pgrp, .perm_check = only_root },
 	{ .cmd = KSU_IOCTL_GET_SULOG_FD, .name = "GET_SULOG_FD", .handler = do_get_sulog_fd, .perm_check = only_root },
 	{ .cmd = KSU_IOCTL_DISABLE_ESCAPE_TO_ROOT, .name = "DISABLE_ESCAPE_TO_ROOT", .handler = do_disable_escape_to_root, .perm_check = only_root },
+	{.cmd = KSU_IOCTL_GET_HOOK_MODE, .name = "GET_HOOK_MODE", .handler = do_get_hook_mode, .perm_check = manager_or_root },
+	{ .cmd = KSU_IOCTL_GET_VERSION_TAG, .name = "GET_VERSION_TAG", .handler = do_get_version_tag, .perm_check = manager_or_root },
 	{ .cmd = 0, .name = NULL, .handler = NULL, .perm_check = NULL } // Sentinel
 };
 
