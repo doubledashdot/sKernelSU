@@ -15,6 +15,8 @@ $(info -- MDIR: $(MDIR))
 # compliant to last upstream kernel change as of 28db74f
 CFLAGS_ksu.o += -DKSU_VERSION=32716
 
+CFLAGS_ksu.o += -DKSU_VERSION_TAG=\"v3_UAPI6\"
+
 KSU_PACKAGE_NAME := who.is.skye.kernalsu
 
 KSU_EXPECTED_SIZE := 0x033b
