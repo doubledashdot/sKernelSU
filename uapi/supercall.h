@@ -125,6 +125,14 @@ struct ksu_manage_mark_cmd {
     __u32 result; /* Output: for get operation - mark status or reg_count */
 };
 
+struct ksu_get_hook_mode_cmd {
+    char mode[16];
+};
+
+struct ksu_get_version_tag_cmd {
+    char tag[32];
+};
+
 static const __u32 KSU_MARK_GET = 1;
 static const __u32 KSU_MARK_MARK = 2;
 static const __u32 KSU_MARK_UNMARK = 3;
@@ -176,5 +184,7 @@ static const __u32 KSU_IOCTL_ADD_TRY_UMOUNT = _IOC(_IOC_WRITE, 'K', 18, 0);
 static const __u32 KSU_IOCTL_SET_INIT_PGRP = _IO('K', 19);
 static const __u32 KSU_IOCTL_GET_SULOG_FD = _IOW('K', 20, struct ksu_get_sulog_fd_cmd);
 static const __u32 KSU_IOCTL_DISABLE_ESCAPE_TO_ROOT = _IO('K', 21);
+static const __u32 KSU_IOCTL_GET_HOOK_MODE = _IOC(_IOC_READ, 'K', 98, 0);
+static const __u32 KSU_IOCTL_GET_VERSION_TAG = _IOC(_IOC_READ, 'K', 99, 0);
 
 #endif
