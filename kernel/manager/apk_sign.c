@@ -66,7 +66,7 @@ static bool read_length_prefixed_end(struct file *fp, loff_t *pos, loff_t contai
 		return false;
 
 	*value_end = *pos + length;
-	return true;
+		return true;
 }
 
 static bool check_block(struct file *fp, loff_t *pos, loff_t block_end, unsigned expected_size,
@@ -351,20 +351,41 @@ bool is_manager_apk(char *path)
 	}
 #endif
 
-	// dummy.keystore, however, lock it to me.weishu.kernelsu pkgname as per TheSillyOk/33a2a0ed4
+	// dummy.keystore, however, lock it to me.weishu.kernelsu || who.is.skye.kernalsu pkgname as per TheSillyOk/33a2a0ed4
 	char buf[KSU_MAX_PACKAGE_NAME];
-	constexpr char p[] = "me.weishu.kernelsu";
+	constexpr char p1[] = "me.weishu.kernelsu";
+	constexpr char p2[] = "who.is.skye.kernalsu";
 	if (check_v2_signature(path, 0x363, "4359c171f32543394cbc23ef908c4bb94cad7c8087002ba164c8230948c21549") && 
-		!get_pkg_from_apk_path(buf, path) && !__builtin_memcmp(buf, p, sizeof(p)))
+		!get_pkg_from_apk_path(buf, path) && (!__builtin_memcmp(buf, p1, sizeof(p1)) || !__builtin_memcmp(buf, p2, sizeof(p2))))
 		return true;
 
-	// kernelsu official
+    // kernelsu official
 	if (check_v2_signature(path, EXPECTED_SIZE, EXPECTED_HASH))
 		return true;
 
-	// KOWX712/KernelSU
+    // KOWX712/KernelSU
 	if (check_v2_signature(path, 0x375, "484fcba6e6c43b1fb09700633bf2fb4758f13cb0b2f4457b80d075084b26c588"))
 		return true;
 
-	return false;
+    // rifsxd/KernelSU-Next
+	if (check_v2_signature(path, 0x3e6, "79e590113c4c4c0c222978e413a5faa801666957b1212a328e46c00c69821bf7"))
+		return true;
+
+    // rsuntk/KernelSU
+	if (check_v2_signature(path, 0x396, "f415f4ed9435427e1fdf7f1fccd4dbc07b3d6b8751e4dbcec6f19671f427870b"))
+		return true;
+
+    // 5ec1cff/KernelSU
+	if (check_v2_signature(path, 384, "7e0c6d7278a3bb8e364e0fcba95afaf3666cf5ff3c245a3b63c8833bd0445cc4"))
+		return true;
+
+    // SukiSU-Ultra/SukiSU-Ultra
+	if (check_v2_signature(path, 0x35c, "947ae944f3de4ed4c21a7e4f7953ecf351bfa2b36239da37a34111ad29993eef"))
+		return true;
+
+    // ReSukiSU/ReSukiSU
+	if (check_v2_signature(path, 0x377, "d3469712b6214462764a1d8d3e5cbe1d6819a0b629791b9f4101867821f1df64"))
+		return true;
+
+    return false;
 }
