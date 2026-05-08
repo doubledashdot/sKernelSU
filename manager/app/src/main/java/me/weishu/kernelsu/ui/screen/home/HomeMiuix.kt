@@ -121,12 +121,23 @@ fun HomePagerMiuix(
                             WarningCard(stringResource(id = R.string.home_pr_kernel_warning))
                         }
                         if (state.showRequireKernelWarning) {
-                            WarningCard(
-                                stringResource(
-                                    id = R.string.require_kernel_version,
-                                    state.ksuVersion ?: 0, me.weishu.kernelsu.Natives.MINIMAL_SUPPORTED_KERNEL
-                                ),
-                            )
+                            if (state.currentManagerVersionCode < (state.ksuVersion ?: 0)) {
+                                WarningCard(
+                                    stringResource(
+                                        id = R.string.require_manager_version,
+                                        state.currentManagerVersionCode,
+                                        state.ksuVersion ?: 0,
+                                    )
+                                )
+                            } else {
+                                WarningCard(
+                                    stringResource(
+                                        id = R.string.require_kernel_version,
+                                        state.ksuVersion ?: 0,
+                                        me.weishu.kernelsu.Natives.MINIMAL_SUPPORTED_KERNEL
+                                    )
+                                )
+                            }
                         }
                         if (state.showRootWarning) {
                             WarningCard(stringResource(id = R.string.grant_root_failed))

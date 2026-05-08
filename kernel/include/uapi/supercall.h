@@ -1,6 +1,10 @@
 #ifndef __KSU_UAPI_SUPERCALL_H
 #define __KSU_UAPI_SUPERCALL_H
 
+// use __u16 to avoid we maybe have version more than 255
+// yep, it's possible it will never be exceeded, just to prevent the possibility
+static const __u16 KERNEL_SU_UAPI_VERSION = 0;
+
 /* Magic numbers for reboot hook to install fd */
 #define KSU_INSTALL_MAGIC1 0xDEADBEEF
 #define KSU_INSTALL_MAGIC2 0xCAFEBABE
@@ -21,6 +25,7 @@ struct ksu_become_daemon_cmd {
 struct ksu_get_info_cmd {
 	__u32 version; /* Output: KERNEL_SU_VERSION */
 	__u32 flags; /* Output: KSU_GET_INFO_FLAG_* bits */
+	__u16 uapi_version; /* Output: KERNEL_SU_UAPI_VERSION */
 	__u32 features; /* Output: max feature ID supported */
 };
 

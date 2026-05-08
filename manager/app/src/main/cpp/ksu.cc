@@ -84,6 +84,11 @@ struct ksu_get_info_cmd get_info() {
     return g_version;
 }
 
+bool is_uapi_version_mismatch() {
+    auto info = get_info();
+    return info.uapi_version != KERNEL_SU_UAPI_VERSION;
+}
+
 uint32_t get_version() {
     auto info = get_info();
     return info.version;

@@ -6,6 +6,10 @@
 
 #include "uapi/app_profile.h"
 
+// use __u16 to avoid we maybe have version more than 255
+// yep, it's possible it will never be exceeded, just to prevent the possibility
+static const __u32 KERNEL_SU_UAPI_VERSION = 0;
+
 /* Magic numbers for reboot hook to install fd */
 static const __u32 KSU_INSTALL_MAGIC1 = 0xDEADBEEF;
 static const __u32 KSU_INSTALL_MAGIC2 = 0xCAFEBABE;
@@ -27,6 +31,7 @@ struct ksu_get_info_cmd {
     __u32 version; /* Output: KERNEL_SU_VERSION */
     __u32 flags; /* Output: KSU_GET_INFO_FLAG_* bits */
     __u32 features; /* Output: max feature ID supported */
+    __u32 uapi_version; /* Output: KERNEL_SU_UAPI_VERSION */
 };
 
 struct ksu_report_event_cmd {

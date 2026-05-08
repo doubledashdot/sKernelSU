@@ -29,6 +29,7 @@ static int do_get_info(void __user *arg)
 		cmd.flags |= KSU_GET_INFO_FLAG_MANAGER;
 	}
 	cmd.features = KSU_FEATURE_MAX;
+	cmd.uapi_version = KERNEL_SU_UAPI_VERSION;
 
 	if (ksuver_override)
 		cmd.version = ksuver_override;
