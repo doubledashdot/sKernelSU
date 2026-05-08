@@ -114,8 +114,10 @@ object Natives {
         }
     }
 
+    external fun checkUAPIMismatch(): Boolean
+
     fun requireNewKernel(): Boolean {
-        return version != -1 && version < MINIMAL_SUPPORTED_KERNEL
+        return (version != -1 && version < MINIMAL_SUPPORTED_KERNEL) || checkUAPIMismatch()
     }
 
     @Keep

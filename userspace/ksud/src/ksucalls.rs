@@ -1,5 +1,6 @@
 #![allow(clippy::unreadable_literal)]
 use crate::ksu_uapi;
+use crate::ksu_uapi::KERNEL_SU_UAPI_VERSION;
 use std::fs;
 use std::os::fd::RawFd;
 use std::sync::OnceLock;
@@ -68,6 +69,7 @@ fn get_info() -> ksu_uapi::ksu_get_info_cmd {
             version: 0,
             flags: 0,
             features: 0,
+            uapi_version: 0,
         };
         let _ = ksuctl(ksu_uapi::KSU_IOCTL_GET_INFO, &raw mut cmd);
         cmd
@@ -80,6 +82,10 @@ pub fn get_version() -> i32 {
 
 pub fn is_late_load() -> bool {
     get_info().flags & ksu_uapi::KSU_GET_INFO_FLAG_LATE_LOAD != 0
+}
+
+pub fn is_uapi_version_mismatch() -> bool {
+    get_info().uapi_version != KERNEL_SU_UAPI_VERSION
 }
 
 pub fn grant_root() -> std::io::Result<()> {

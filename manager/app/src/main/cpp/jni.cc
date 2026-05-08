@@ -24,6 +24,12 @@ Java_me_weishu_kernelsu_Natives_getVersion(JNIEnv *env, jobject) {
 }
 
 extern "C"
+JNIEXPORT jboolean JNICALL
+Java_me_weishu_kernelsu_Natives_checkUAPIMismatch(JNIEnv *env, jobject) {
+    return is_uapi_version_mismatch();
+}
+
+extern "C"
 JNIEXPORT jint JNICALL
 Java_me_weishu_kernelsu_Natives_getSuperuserCount(JNIEnv *env, jobject) {
     struct ksu_new_get_allow_list_cmd cmd = {

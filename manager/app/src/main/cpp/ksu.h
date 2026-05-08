@@ -12,6 +12,8 @@
 
 #include "uapi/ksu.h"
 
+bool is_uapi_version_mismatch();
+
 uint32_t get_version();
 
 bool uid_should_umount(int uid);
