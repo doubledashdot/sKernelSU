@@ -24,9 +24,15 @@ Java_me_weishu_kernelsu_Natives_getVersion(JNIEnv *env, jobject) {
 }
 
 extern "C"
-JNIEXPORT jboolean JNICALL
-Java_me_weishu_kernelsu_Natives_checkUAPIMismatch(JNIEnv *env, jobject) {
-    return is_uapi_version_mismatch();
+JNIEXPORT jint JNICALL
+Java_me_weishu_kernelsu_Natives_getKernelUAPIVersion(JNIEnv *env, jobject) {
+    return get_kernel_uapi_version();
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_me_weishu_kernelsu_Natives_getManagerUAPIVersion(JNIEnv *env, jobject) {
+    return get_manager_uapi_version();
 }
 
 extern "C"

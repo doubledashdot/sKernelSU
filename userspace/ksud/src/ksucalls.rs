@@ -1,6 +1,5 @@
 #![allow(clippy::unreadable_literal)]
 use crate::ksu_uapi;
-use crate::ksu_uapi::KERNEL_SU_UAPI_VERSION;
 use std::fs;
 use std::os::fd::RawFd;
 use std::sync::OnceLock;
@@ -85,7 +84,7 @@ pub fn is_late_load() -> bool {
 }
 
 pub fn is_uapi_version_mismatch() -> bool {
-    get_info().uapi_version != KERNEL_SU_UAPI_VERSION
+    get_info().uapi_version != ksu_uapi::KERNEL_SU_UAPI_VERSION
 }
 
 pub fn grant_root() -> std::io::Result<()> {

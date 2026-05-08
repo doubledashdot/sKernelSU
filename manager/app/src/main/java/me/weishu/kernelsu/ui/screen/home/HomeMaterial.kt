@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.weishu.kernelsu.KernelVersion
+import me.weishu.kernelsu.Natives
 import me.weishu.kernelsu.R
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.material.TonalCard
@@ -86,6 +87,15 @@ fun HomePagerMaterial(
             } else if (state.showKernelPrBuildWarning) {
                 WarningCard(stringResource(id = R.string.home_pr_kernel_warning))
             }
+            if (state.showUAPIMisMatchWarning) {
+                WarningCard(
+                    stringResource(
+                        id = R.string.uapi_mismatch,
+                        state.managerUAPIVersion,
+                        state.kernelUAPIVersion ?: 0,
+                    )
+                )
+            }
             if (state.showRequireKernelWarning) {
                 if (state.currentManagerVersionCode < (state.ksuVersion ?: 0)) {
                     WarningCard(
@@ -100,7 +110,7 @@ fun HomePagerMaterial(
                         stringResource(
                             id = R.string.require_kernel_version,
                             state.ksuVersion ?: 0,
-                            me.weishu.kernelsu.Natives.MINIMAL_SUPPORTED_KERNEL
+                            Natives.MINIMAL_SUPPORTED_KERNEL
                         )
                     )
                 }
@@ -575,4 +585,7 @@ private fun previewHomeScreenState(
     superuserCount = superuserCount,
     moduleCount = moduleCount,
     systemInfo = previewSystemInfo.copy(selinuxStatus = selinuxStatus),
+    kernelUAPIVersion = 1,
+    managerUAPIVersion = 1,
+    uapiMismatch = false
 )

@@ -12,7 +12,9 @@
 
 #include "uapi/ksu.h"
 
-bool is_uapi_version_mismatch();
+uint16_t get_kernel_uapi_version();
+
+uint16_t get_manager_uapi_version();
 
 uint32_t get_version();
 

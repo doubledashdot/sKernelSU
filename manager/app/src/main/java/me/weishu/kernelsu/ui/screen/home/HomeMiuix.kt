@@ -120,6 +120,15 @@ fun HomePagerMiuix(
                         } else if (state.showKernelPrBuildWarning) {
                             WarningCard(stringResource(id = R.string.home_pr_kernel_warning))
                         }
+                        if (state.showUAPIMisMatchWarning) {
+                            WarningCard(
+                                stringResource(
+                                    id = R.string.uapi_mismatch,
+                                    state.managerUAPIVersion,
+                                    state.kernelUAPIVersion ?: 0,
+                                )
+                            )
+                        }
                         if (state.showRequireKernelWarning) {
                             if (state.currentManagerVersionCode < (state.ksuVersion ?: 0)) {
                                 WarningCard(
@@ -654,4 +663,7 @@ private fun previewHomeScreenState(
     superuserCount = superuserCount,
     moduleCount = moduleCount,
     systemInfo = previewSystemInfo.copy(selinuxStatus = selinuxStatus),
+    kernelUAPIVersion = 1,
+    managerUAPIVersion = 1,
+    uapiMismatch = false,
 )
