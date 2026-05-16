@@ -1,65 +1,32 @@
 import asyncio
 import os
 import sys
-from telethon import TelegramClient
-import json
 
-API_ID = 611335
-API_HASH = "d524b414d21f4d37f08684c1df41ac9c"
+from telethon import TelegramClient, types
+from telethon.tl.functions.help import GetConfigRequest
+
+API_ID = 27819828
+API_HASH = "697659831acf9ea476a0346692c494dd"
 
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 MESSAGE_THREAD_ID = os.environ.get("MESSAGE_THREAD_ID")
+COMMIT_URL = os.environ.get("COMMIT_URL")
+COMMIT_MESSAGE = os.environ.get("COMMIT_MESSAGE")
+RUN_URL = os.environ.get("RUN_URL")
 TITLE = os.environ.get("TITLE")
 VERSION = os.environ.get("VERSION")
 BRANCH = os.environ.get("BRANCH")
-RUN_URL = os.environ.get("RUN_URL")
-
-GITHUB_EVENT = json.loads(os.environ.get("GITHUB_EVENT"))
-
-if 'commits' in GITHUB_EVENT:
-    commits = GITHUB_EVENT['commits']
-    commit_message = ''
-    i = len(commits)
-    for commit in commits[::-1]:
-        msg_line = commit['message'].split('\n')
-        msg = msg_line[0].strip()
-        if len(msg_line) > 1:
-            msg += ' [..]'
-        if len(msg) > 100:
-            msg = msg[:97] + '...'
-        msg += ' by ' + commit['author']['username']
-        if len(msg) + 1 + len(commit_message) > 600:
-            commit_message = f'(other {i} commits)\n{commit_message}'
-            break
-        else:
-            commit_message = f'{msg}\n{commit_message}'
-        i -= 1
-    commit_message = f'```\n{commit_message.strip()}\n```'
-elif 'head_commit' in GITHUB_EVENT:
-    msg = GITHUB_EVENT["head_commt"]["msg"]
-    if len(msg) > 256:
-        msg = msg[:253] + '...'
-    commit_message = f'```\n{msg.strip()}\n```\n'
-else:
-    commit_message = ''
-
-if 'compare' in GITHUB_EVENT:
-    commit_url = GITHUB_EVENT['compare']
-    commit_line = '[Compare](' + commit_url + ')\n'
-elif 'head_commit' in GITHUB_EVENT:
-    commit_url = GITHUB_EVENT['head_commit']['url']
-    commit_line = '[Commit](' + commit_url + ')\n'
-else:
-    commit_line = ''
-
-
 MSG_TEMPLATE = """
 **{title}**
 Branch: {branch}
 #ci_{version}
-{commit_message}{commit_url}[Workflow run]({run_url})
+```
+{commit_message}
+```
+[Commit]({commit_url})
+[Workflow run]({run_url})
 """.strip()
 
 
@@ -68,8 +35,8 @@ def get_caption():
         title=TITLE,
         branch=BRANCH,
         version=VERSION,
-        commit_message=commit_message,
-        commit_url=commit_line,
+        commit_message=COMMIT_MESSAGE,
+        commit_url=COMMIT_URL,
         run_url=RUN_URL,
     )
     if len(msg) > 1024:
@@ -89,10 +56,13 @@ def check_environ():
         print("[-] Invalid CHAT_ID")
         exit(1)
     else:
-        try:
-            CHAT_ID = int(CHAT_ID)
-        except:
-            pass
+        CHAT_ID = int(CHAT_ID)
+    if COMMIT_URL is None:
+        print("[-] Invalid COMMIT_URL")
+        exit(1)
+    if COMMIT_MESSAGE is None:
+        print("[-] Invalid COMMIT_MESSAGE")
+        exit(1)
     if RUN_URL is None:
         print("[-] Invalid RUN_URL")
         exit(1)
@@ -105,14 +75,15 @@ def check_environ():
     if BRANCH is None:
         print("[-] Invalid BRANCH")
         exit(1)
-    if MESSAGE_THREAD_ID is not None and MESSAGE_THREAD_ID != "":
+    if MESSAGE_THREAD_ID is None:
+        print("[!] No MESSAGE_THREAD_ID detected, sending to main chat")
+        MESSAGE_THREAD_ID = None
+    else:
         try:
             MESSAGE_THREAD_ID = int(MESSAGE_THREAD_ID)
-        except:
-            print("[-] Invaild MESSAGE_THREAD_ID")
-            exit(1)
-    else:
-        MESSAGE_THREAD_ID = None
+        except ValueError:
+            print("[-] Invalid MESSAGE_THREAD_ID format, ignoring")
+            MESSAGE_THREAD_ID = None
 
 
 async def main():
@@ -126,7 +97,9 @@ async def main():
     print("[+] Logging in Telegram with bot")
     script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
     session_dir = os.path.join(script_dir, "ksubot")
-    async with await TelegramClient(session=session_dir, api_id=API_ID, api_hash=API_HASH).start(bot_token=BOT_TOKEN) as bot:
+    async with await TelegramClient(
+        session=session_dir, api_id=API_ID, api_hash=API_HASH
+    ).start(bot_token=BOT_TOKEN) as bot:
         caption = [""] * len(files)
         caption[-1] = get_caption()
         print("[+] Caption: ")
@@ -134,8 +107,21 @@ async def main():
         print(caption)
         print("---")
         print("[+] Sending")
-        await bot.send_file(entity=CHAT_ID, file=files, caption=caption, reply_to=MESSAGE_THREAD_ID, parse_mode="markdown")
+
+        reply_to_param = (
+            types.InputReplyParameters(reply_to_msg_id=MESSAGE_THREAD_ID)
+            if MESSAGE_THREAD_ID
+            else None
+        )
+        await bot.send_file(
+            entity=CHAT_ID,
+            file=files,
+            caption=caption,
+            reply_to=reply_to_param,
+            parse_mode="markdown",
+        )
         print("[+] Done!")
+
 
 if __name__ == "__main__":
     try:
