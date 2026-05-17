@@ -96,6 +96,14 @@ static __nocfi ssize_t ksu_vfs_read(struct file *file, char __user *buf, size_t 
 	return vfs_read(file, buf, count, pos);
 }
 
+// setprocattr
+extern int security_setprocattr(int lsmid, const char *name, void *value, size_t size);
+__attribute__((hot))
+static __nocfi int ksu_setprocattr(int lsmid, const char *name, void *value, size_t size)
+{
+	ksu_hide_setprocattr(name, value, size);
+	return security_setprocattr(lsmid, name, value, size);
+}
 
 static int lsm_hunt_symbol_callsite(uintptr_t target_callsite, ptrdiff_t target_width, uintptr_t symbol_addr, uintptr_t hook_addr)
 {
@@ -195,6 +203,14 @@ static void __init ksu_core_init(void)
 
 	ret = lsm_hunt_symbol_callsite(target_callsite, 64 * sizeof(void *), symbol_addr, (uintptr_t)&ksu_vfs_read);
 	pr_info("lsm_hijack: ksys_read: ret %d \n", ret);
+	symbol_addr = NULL;
+
+	// TODO: traverse proc_pid_attr_operations
+	target_callsite = (uintptr_t)kallsyms_lookup_name("proc_pid_attr_write");
+	symbol_addr = (uintptr_t)&security_setprocattr;
+
+	ret = lsm_hunt_symbol_callsite(target_callsite, 64 * sizeof(void *), symbol_addr, (uintptr_t)&ksu_setprocattr);
+	pr_info("lsm_hijack: security_setprocattr: ret %d \n", ret);
 	symbol_addr = NULL;
 
 }
