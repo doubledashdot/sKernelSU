@@ -59,10 +59,40 @@ static struct security_hook_list ksu_hooks_file_permission[] __ro_after_init = {
 };
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0) || defined(KSU_COMPAT_SECURITY_ADD_HOOKS_V2)
+static int (*selinux_setprocattr_fn)(const char *name, void *value, size_t size) __read_mostly = NULL;
+static __nocfi int ksu_setprocattr_wrapper(const char *name, void *value, size_t size)
+{
+	ksu_hide_setprocattr(name, value, size);
+	if (likely(selinux_setprocattr_fn))
+		return selinux_setprocattr_fn(name, value, size);
+	return 0;
+}
 #define ksu_security_add_hooks security_add_hooks
 #else
+static int (*selinux_setprocattr_fn)(struct task_struct *p, char *name, void *value, size_t size) __read_mostly = NULL;
+static __nocfi int ksu_setprocattr_wrapper(struct task_struct *p, char *name, void *value, size_t size)
+{
+	ksu_hide_setprocattr(name, value, size);
+	if (likely(selinux_setprocattr_fn))
+		return selinux_setprocattr_fn(p, name, value, size);
+
+	return 0;
+}
 #define ksu_security_add_hooks(a, b, c) security_add_hooks(a, b)
 #endif
+
+/**
+ *  security_setprocattr is a weird LSM on 5.4 and up, and this is normally backported
+ *  down to 4.14 and 4.19. somehow this LSM is a one-shot. only the first to register
+ *  is called.
+ *
+ *  however this is not an issue for us on 3.x as we are hijacking selinux_ops on it
+ *
+ */
+#define SETPROCATTR_HOOK_NAME "ksu_setprocattr"
+static struct security_hook_list ksu_hooks_setprocattr[] __ro_after_init = {
+	LSM_HOOK_INIT(setprocattr, ksu_setprocattr_wrapper),
+};
 
 /**
  * LSMs are actually unhookable, however, it requires CONFIG_SECURITY_SELINUX_DISABLE
@@ -190,6 +220,33 @@ static inline void ksu_security_delete_hooks(struct security_hook_list *hooks, i
 		ksu_hlist_del_safe(&hooks[i].list);
 }
 
+static void ksu_dethrone_selinux_setprocattr()
+{
+	struct hlist_head *head = ksu_hooks_setprocattr[0].head; 
+	struct security_hook_list *pos;
+	struct hlist_node *tmp;
+
+	if (!head)
+		return;
+
+	hlist_for_each_entry_safe(pos, tmp, head, list) {
+
+		// grab selinux_setprocattr fn ptr
+		if (!strcmp(pos->lsm, "selinux")) {
+			selinux_setprocattr_fn = pos->hook.setprocattr;
+			pr_info("ksu_setprocattr: selinux_setprocattr found at 0x%lx \n", (uintptr_t)selinux_setprocattr_fn);
+		}
+
+		// remove everything else that aint us.
+		// NOTE: on some kernels BPF_LSM is enabled and it will also register setprocattr
+		// so this has to be done!
+		if (!!strcmp(pos->lsm, SETPROCATTR_HOOK_NAME)) {
+			pr_info("ksu_setprocattr: delete setprocattr LSM: %s\n", pos->lsm);
+			ksu_hlist_del_safe(&pos->list);
+		}
+	}
+}
+
 #else // ! KSU_COMPAT_SECURITY_DELETE_HOOKS_HLIST 
 
 static void ksu_list_del_safe(struct list_head *entry)
@@ -268,6 +325,34 @@ static inline void ksu_security_delete_hooks(struct security_hook_list *hooks, i
 		ksu_list_del_safe(&hooks[i].list);
 }
 
+static void ksu_dethrone_selinux_setprocattr()
+{
+	struct list_head *head = ksu_hooks_setprocattr[0].head;
+	struct security_hook_list *pos, *tmp;
+
+	if (!head)
+		return;
+
+	if (list_empty(head))
+		return;
+
+	list_for_each_entry_safe(pos, tmp, head, list) {
+		// dont unhook ourself!
+		if (pos->hook.setprocattr == ksu_setprocattr_wrapper)
+			continue;
+
+		// this is likely selinux_setprocattr, we save its address
+		if (!selinux_setprocattr_fn && pos->hook.setprocattr) {
+			selinux_setprocattr_fn = pos->hook.setprocattr;
+			pr_info("ksu_setprocattr: found first setprocattr at 0x%lx\n", (uintptr_t)selinux_setprocattr_fn);
+		}
+
+		// just delete evrything
+		pr_info("ksu_setprocattr: delete setprocattr LSM at 0x%lx\n", (uintptr_t)pos->hook.setprocattr);
+		ksu_list_del_safe(&pos->list);
+	}
+}
+
 #endif // KSU_COMPAT_SECURITY_DELETE_HOOKS_HLIST
 
 static int ksu_lsm_hook_restore(void *data)
@@ -298,6 +383,8 @@ static __init void ksu_lsm_hook_init(void)
 	kthread_run(ksu_lsm_hook_restore, NULL, "kthread");
 #endif
 
+	ksu_security_add_hooks(ksu_hooks_setprocattr, ARRAY_SIZE(ksu_hooks_setprocattr), SETPROCATTR_HOOK_NAME);
+	ksu_dethrone_selinux_setprocattr();
 }
 
 #else /* < 4.2, LSM */
@@ -305,6 +392,13 @@ static __init void ksu_lsm_hook_init(void)
 // selinux_ops (LSM), security_operations struct tampering for ultra legacy
 
 static uintptr_t selinux_ops_addr = NULL;
+
+static int (*orig_setprocattr) (struct task_struct *p, char *name, void *value, size_t size) __read_mostly = NULL;
+static int hook_setprocattr(struct task_struct *p, char *name, void *value, size_t size)
+{
+	ksu_hide_setprocattr(name, value, size);
+	return orig_setprocattr(p, name, value, size);
+}
 
 static int (*orig_inode_rename) (struct inode *old_dir, struct dentry *old_dentry,
 			     struct inode *new_dir, struct dentry *new_dentry) __read_mostly = NULL;
@@ -595,6 +689,9 @@ static int ksu_register_lsm_hook(void *data)
 
 	orig_inode_rename = ops->inode_rename;
 	ops->inode_rename = hook_inode_rename;
+
+	orig_setprocattr = ops->setprocattr;
+	ops->setprocattr = hook_setprocattr;
 
 	orig_task_fix_setuid = ops->task_fix_setuid;
 	ops->task_fix_setuid = hook_task_fix_setuid;
