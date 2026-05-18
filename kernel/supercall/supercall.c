@@ -1,6 +1,7 @@
 static int anon_ksu_release(struct inode *inode, struct file *filp)
 {
-	pr_info("ksu fd released\n");
+	if (IS_ENABLED(CONFIG_KSU_DEBUG))
+		pr_info("ksu fd released\n");
 	return 0;
 }
 
@@ -41,7 +42,8 @@ int ksu_install_fd(void)
 	// Install fd
 	fd_install(fd, filp);
 
-	pr_info("ksu fd installed: %d for pid %d\n", fd, current->pid);
+	if (IS_ENABLED(CONFIG_KSU_DEBUG))
+		pr_info("ksu fd installed: %d for pid %d\n", fd, current->pid);
 
 	return fd;
 }
@@ -49,7 +51,8 @@ int ksu_install_fd(void)
 static inline int ksu_handle_fd_request(void __user *arg4)
 {
 	int fd = ksu_install_fd();
-	pr_info("[%d] install ksu fd: %d\n", current->pid, fd);
+	if (IS_ENABLED(CONFIG_KSU_DEBUG))
+		pr_info("[%d] install ksu fd: %d\n", current->pid, fd);
 
 	if (copy_to_user(arg4, &fd, sizeof(fd))) {
 		pr_err("install ksu fd reply err\n");
