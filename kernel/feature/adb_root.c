@@ -1,6 +1,10 @@
 #ifdef CONFIG_KSU_FEATURE_ADBROOT
 
+#ifdef CONFIG_KSU_FEATURE_ADBROOT_DEFAULT_ENABLE
+static bool ksu_adb_root __read_mostly = true;
+#else
 static bool ksu_adb_root __read_mostly = false;
+#endif /* CONFIG_KSU_FEATURE_ADBROOT_DEFAULT_ENABLE */
 
 static long is_exec_adbd(const char __user **filename_user)
 {
