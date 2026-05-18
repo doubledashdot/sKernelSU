@@ -410,12 +410,14 @@ static int persistent_allow_list_pre(void *data)
 	 * 'mutex-trylock-fail-then-return' is detrimental here
 	 */
 	guarded_mutex_lock(&allowlist_mutex);
-	pr_info("do_persistent_allow_list: pid: %d started\n", current->pid);
+	if (IS_ENABLED(CONFIG_KSU_DEBUG))
+		pr_info("do_persistent_allow_list: pid: %d started\n", current->pid);
 
 	escape_to_root_forced(); // give permissions for everything
 	do_persistent_allow_list();
 
-	pr_info("do_persistent_allow_list: pid: %d exit\n", current->pid);
+	if (IS_ENABLED(CONFIG_KSU_DEBUG))
+		pr_info("do_persistent_allow_list: pid: %d exit\n", current->pid);
 	return 0;
 }
 

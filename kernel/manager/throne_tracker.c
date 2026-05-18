@@ -345,7 +345,8 @@ static int throne_tracker_thread(void *data)
 	// now de-void it here
 	bool prune_only = (bool)data;
 
-	pr_info("throne_tracker: pid: %d started\n", current->pid);
+	if (IS_ENABLED(CONFIG_KSU_DEBUG))
+		pr_info("throne_tracker: pid: %d started\n", current->pid);
 
 	guarded_mutex_lock(&throne_tracker_mutex);
 
@@ -376,7 +377,8 @@ start_tt:
 	escape_to_root_forced();
 	throne_tracker_fn(prune_only);
 
-	pr_info("throne_tracker: pid: %d exit!\n", current->pid);
+	if (IS_ENABLED(CONFIG_KSU_DEBUG))
+		pr_info("throne_tracker: pid: %d exit!\n", current->pid);
 	return 0;
 }
 
