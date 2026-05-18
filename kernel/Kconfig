@@ -62,6 +62,13 @@ config KSU_FEATURE_ADBROOT
 	help
 	  Build KernelSU's adb root feature.
 
+config KSU_FEATURE_ADBROOT_DEFAULT_ENABLE
+	bool "Enable KernelSU ADB Root feature by default"
+	depends on KSU_FEATURE_ADBROOT
+	default n
+	help
+	  Turn KernelSU's adb root feature on by default.
+
 config KSU_DEBUG
 	bool "KernelSU debug mode"
 	depends on KSU
