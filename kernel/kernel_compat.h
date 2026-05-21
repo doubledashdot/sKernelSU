@@ -220,4 +220,8 @@ static __always_inline long ksu_copy_from_user_retry(void *to, const void __user
 	return copy_from_user(to, from, count);
 }
 
+#ifndef __nocfi
+#define __nocfi
+#endif
+
 #endif // __KSU_H_KERNEL_COMPAT
