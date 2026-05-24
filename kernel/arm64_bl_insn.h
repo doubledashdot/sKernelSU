@@ -21,7 +21,7 @@
 #include <asm/patching.h>
 #endif
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 8, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 8, 0) || defined(CONFIG_KSU_HACK_ARM64_BRANCH_LINK)
 
 /**
  * arm64_bl_patch(): hunt and patch first bl insn found with target
@@ -107,6 +107,6 @@ bail:
 	return -ENOENT;
 }
 
-#endif // 6.8
+#endif // 6.8 || CONFIG_KSU_HACK_ARM64_BRANCH_LINK
 
 #endif // __KSU_H_ARM64_BL_PATCH
