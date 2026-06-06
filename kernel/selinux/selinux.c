@@ -72,6 +72,11 @@ void setenforce(bool enforce)
 #endif
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
+#pragma "this is hacky, consider checking your kernel tree"
+int selinux_disabled = 1;
+#endif
+
 bool getenforce(void)
 {
 #ifdef CONFIG_SECURITY_SELINUX_DISABLE
