@@ -24,4 +24,11 @@ static inline int endswith(const char *s, const char *t)
 
 extern struct cred* ksu_cred;
 
+// kernel su version full strings
+#ifndef KSU_VERSION_FULL
+#define KSU_VERSION_FULL "v4.1.0-@doubledashdot"
+#endif
+
+#define KSU_FULL_VERSION_STRING 255
+
 #endif
