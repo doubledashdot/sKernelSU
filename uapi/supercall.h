@@ -6,6 +6,8 @@
 
 #include "uapi/app_profile.h"
 
+#define KSU_FULL_VERSION_STRING 255
+
 // 2: allowlist v4 root profile flags
 static const __u32 KERNEL_SU_UAPI_VERSION = 2;
 
@@ -156,6 +158,32 @@ static const __u8 KSU_UMOUNT_WIPE = 0; /* ignore everything and wipe list */
 static const __u8 KSU_UMOUNT_ADD = 1; /* add entry (path + flags) */
 static const __u8 KSU_UMOUNT_DEL = 2; /* delete entry, strcmp */
 
+// Downstream supercall struct
+struct ksu_get_full_version_cmd {
+    char version_full[KSU_FULL_VERSION_STRING]; // Output: full version string
+};
+
+struct ksu_hook_type_cmd {
+    char hook_type[32]; // Output: hook type string
+};
+
+struct ksu_manager_entry {
+    __u32 uid;
+    __u8 signature_index;
+} __attribute__((packed));
+
+struct ksu_get_managers_cmd {
+    __u16 count; // Input / Output: number of managers in array
+    __u16 total_count; // Output: total number of managers in requested list
+    struct ksu_manager_entry managers[]; // Output: Array of active manager
+} __attribute__((packed));
+// Downstream Kpatch, non-supported in my driver
+static const __u8 KERNEL_PATCH_NOT_FOUND = 0;
+
+struct ksu_get_kernel_patch_implement {
+    __u8 type; // Output: Current Kernel Patch Implement
+};
+
 /* IOCTL command definitions */
 static const __u32 KSU_IOCTL_GRANT_ROOT = _IOC(_IOC_NONE, 'K', 1, 0);
 static const __u32 KSU_IOCTL_GET_INFO = _IOR('K', 2, struct ksu_get_info_cmd);
@@ -186,5 +214,13 @@ static const __u32 KSU_IOCTL_GET_SULOG_FD = _IOW('K', 20, struct ksu_get_sulog_f
 static const __u32 KSU_IOCTL_DISABLE_ESCAPE_TO_ROOT = _IO('K', 21);
 static const __u32 KSU_IOCTL_GET_HOOK_MODE = _IOC(_IOC_READ, 'K', 98, 0);
 static const __u32 KSU_IOCTL_GET_VERSION_TAG = _IOC(_IOC_READ, 'K', 99, 0);
+// Downstream add IOCTL command definitions
+static const __u32 KSU_IOCTL_GET_FULL_VERSION = _IOC(_IOC_READ, 'K', 100, 0);
+static const __u32 KSU_IOCTL_HOOK_TYPE = _IOC(_IOC_READ, 'K', 101, 0);
+// 102 = ENABLE_KPM (KernelPatch Module),deprecated
+static const __u32 KSU_IOCTL_DYNAMIC_MANAGER = _IOC(_IOC_READ | _IOC_WRITE, 'K', 103, 0);
+// 104 = old get_managers, deprecated
+static const __u32 KSU_IOCTL_GET_MANAGERS = _IOC(_IOC_READ | _IOC_WRITE, 'K', 105, 0);
+static const __u32 KSU_IOCTL_GET_KERNEL_PATCH_IMPLEMENT = _IOC(_IOC_READ, 'K', 106, 0);
 
 #endif
