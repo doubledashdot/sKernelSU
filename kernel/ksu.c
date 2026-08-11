@@ -178,6 +178,10 @@
 #include "hook/branch_link_hook_arm64.c"
 #endif
 
+#ifdef CONFIG_KSU_SUSFS
+#include <linux/susfs.h>
+#endif // #ifdef CONFIG_KSU_SUSFS
+
 // track backports and other quirks here
 // ref: kernel_compat.c, Makefile
 // yes looks nasty
@@ -217,7 +221,13 @@
 	#define FEAT_7 ""
 #endif
 
-#define EXTRA_FEATURES FEAT_1 FEAT_2 FEAT_3 FEAT_4 FEAT_5 FEAT_6 FEAT_7
+#if defined(CONFIG_KSU_SUSFS)
+	#define FEAT_8 " +suspicious_fs"
+#else
+	#define FEAT_8 ""
+#endif
+
+#define EXTRA_FEATURES FEAT_1 FEAT_2 FEAT_3 FEAT_4 FEAT_5 FEAT_6 FEAT_7 FEAT_8
 
 static inline void ksu_print_build_info(void)
 {
@@ -271,6 +281,9 @@ static int __init kernelsu_init(void)
 
 	ksu_allowlist_init();
 	ksu_throne_tracker_init();
+#ifdef CONFIG_KSU_SUSFS
+    susfs_init();
+#endif // #ifdef CONFIG_KSU_SUSFS
 	ksu_ksud_init();
 	ksu_file_wrapper_init();
 	ksu_preinit_init();
