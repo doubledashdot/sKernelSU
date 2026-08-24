@@ -82,7 +82,7 @@ config KSU_HOSTSREDIRECT
 	bool "/system/etc/hosts redirection"
 	depends on KSU
 	depends on (ARM || ARM64)
-	default n
+	default y
 	help
 	  Kernel-level sys_openat fd redirect targeting /system/etc/hosts to /data/adb/hosts.
 	  Allows hosts file modification without mounting hosts file directly, this is meant to
