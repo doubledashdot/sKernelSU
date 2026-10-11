@@ -11,7 +11,7 @@ MDIR := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 $(info -- KDIR: $(KDIR))
 $(info -- MDIR: $(MDIR))
 
-# compliant to last upstream kernel change as of 469c428
+# compliant to last upstream kernel change as of 469c428 | 2e53de2
 CFLAGS_ksu.o += -DKSU_VERSION=32700
 CFLAGS_ksu.o += -DKSU_VERSION_TAG=\"v3_UAPI6\"
 
