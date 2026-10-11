@@ -11,7 +11,7 @@ MDIR := $(realpath $(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 $(info -- KDIR: $(KDIR))
 $(info -- MDIR: $(MDIR))
 
-# compliant to last upstream kernel change as of 0a1f3ff
+# compliant to last upstream kernel change as of 0a1f3ff | d5cc719
 CFLAGS_ksu.o += -DKSU_VERSION=32676
 
 KSU_PACKAGE_NAME := who.is.skye.kernalsu
