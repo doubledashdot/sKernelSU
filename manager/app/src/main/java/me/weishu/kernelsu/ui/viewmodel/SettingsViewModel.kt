@@ -91,6 +91,8 @@ class SettingsViewModel(
             } else {
                 repo.getShellSuAdbOnlyPersistValue() == 1L
             }
+            val avcSpoofStatus = repo.getAvcSpoofStatus()
+            val isAvcSpoofEnabled = repo.isAvcSpoofEnabled()
             val isDefaultUmountModules = repo.isDefaultUmountModules()
             val uiMode = repo.uiMode
             val autoJailbreak = repo.autoJailbreak
@@ -132,6 +134,8 @@ class SettingsViewModel(
                     isSelinuxHideEnabled = isSelinuxHideEnabled,
                     sulogStatus = sulogStatus,
                     isSulogEnabled = isSulogEnabled,
+                    avcSpoofStatus = avcSpoofStatus,
+                    isAvcSpoofEnabled = isAvcSpoofEnabled,
                     isDefaultUmountModules = isDefaultUmountModules,
                     isLkmMode = isLkmMode,
                     autoJailbreak = autoJailbreak,
@@ -332,6 +336,15 @@ class SettingsViewModel(
                             Toast.LENGTH_LONG).show()
                     }
                 }
+            }
+        }
+    }
+
+    fun setAvcSpoofEnabled(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (repo.setAvcSpoofEnabled(enabled)) {
+                repo.execKsudFeatureSave()
+                _uiState.update { it.copy(isAvcSpoofEnabled = enabled) }
             }
         }
     }
