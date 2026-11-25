@@ -369,8 +369,9 @@ page_ok:
 	// selinux_setprocattr hook init is on lsm.
 	
 	// downstream/slow_avc_audit_defs.h
+#ifdef CONFIG_KSU_SUSFS
 	ksu_init_slow_avc_audit_hook();
-
+#endif
 	return 0;
 }
 
